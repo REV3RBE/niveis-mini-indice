@@ -1,0 +1,19 @@
+{
+    "coletadoEm":  "2026-11-24T20:38:53",
+    "sp":  {
+               "fonte":  "Yahoo Finance",
+               "titulo":  "E-Mini S\u0026P 500 Dec 26",
+               "url":  "https://finance.yahoo.com/quote/ES=F",
+               "ultimo":  7211.5,
+               "variacaoPct":  -0.08,
+               "horaSite":  "24/11 20:28"
+           },
+    "vix":  {
+                "fonte":  "CNBC",
+                "titulo":  "VIX Futuro VXZ26 (venc. 2026-12-16)",
+                "url":  "https://www.cnbc.com/quotes/@VX.1",
+                "ultimo":  24.15,
+                "variacaoPct":  0.72,
+                "horaSite":  "6:28 PM EST"
+            }
+}
