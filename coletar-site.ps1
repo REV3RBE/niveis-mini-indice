@@ -89,6 +89,11 @@ function Get-WIN($hojeISO) {
     $h = Get-Json "https://cotacao.b3.com.br/mds/api/v1/DailyFluctuationHistory/$simb"
     $barras = @($h.TradgFlr.scty.lstQtn)
     if ($barras.Count -eq 0 -or -not $barras[-1].closPric) { throw "A B3 ainda nao tem os candles do pregao de $simb" }
+    # Coleta atrasada (depois das 9:00): o pregao de hoje ja abriu e o ultimo candle e preco ao vivo,
+    # nao fechamento. O pregao fecha ~18:30; antes disso mantem o fechamento confirmado da coleta anterior.
+    if ([string]$h.TradgFlr.date -eq $hojeISO -and [string]$barras[-1].dtTm -lt '18:20') {
+        throw "O pregao de hoje ja esta aberto (ultimo candle $($barras[-1].dtTm)); o ultimo candle nao e fechamento"
+    }
     return [ordered]@{
         fonte      = 'B3'
         simbolo    = $simb
