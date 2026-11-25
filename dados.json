@@ -1,29 +1,29 @@
 {
-    "coletadoEm":  "2026-11-24T21:12:06",
-    "win":  {
-                "fonte":  "B3",
-                "simbolo":  "WINZ26",
-                "vencimento":  "2026-12-16",
-                "fechamento":  165285,
-                "dataPregao":  "2026-11-24",
-                "horaUltimoCandle":  "18:31:00",
-                "ajuste":  165397,
-                "url":  "https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/"
-            },
-    "sp":  {
-               "fonte":  "Yahoo Finance",
-               "titulo":  "E-Mini S\u0026P 500 Dec 26",
-               "url":  "https://finance.yahoo.com/quote/ES=F",
-               "ultimo":  7195.75,
-               "variacaoPct":  -0.3,
-               "horaSite":  "24/11 21:02"
-           },
-    "vix":  {
-                "fonte":  "CNBC",
-                "titulo":  "VIX Futuro VXZ26 (venc. 2026-12-16)",
-                "url":  "https://www.cnbc.com/quotes/@VX.1",
-                "ultimo":  24.45,
-                "variacaoPct":  1.97,
-                "horaSite":  "7:01 PM EST"
-            }
+  "coletadoEm": "2026-11-24T21:12:47",
+  "win": {
+    "fonte": "B3",
+    "simbolo": "WINZ26",
+    "vencimento": "2026-12-16",
+    "fechamento": 165285.0,
+    "dataPregao": "2026-11-24",
+    "horaUltimoCandle": "18:31:00",
+    "ajuste": 165397.0,
+    "url": "https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/"
+  },
+  "sp": {
+    "fonte": "Yahoo Finance",
+    "titulo": "E-Mini S&P 500 Dec 26",
+    "url": "https://finance.yahoo.com/quote/ES=F",
+    "ultimo": 7194.5,
+    "variacaoPct": -0.32,
+    "horaSite": "24/11 21:02"
+  },
+  "vix": {
+    "fonte": "CNBC",
+    "titulo": "VIX Futuro VXZ26 (venc. 2026-12-16)",
+    "url": "https://www.cnbc.com/quotes/@VX.1",
+    "ultimo": 24.45,
+    "variacaoPct": 1.97,
+    "horaSite": "7:01 PM EST"
+  }
 }
