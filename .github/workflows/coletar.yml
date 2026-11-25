@@ -3,6 +3,7 @@ name: Coleta e publicação
 on:
   schedule:
     - cron: "50 11 * * 1-5"   # 8:50 em Brasília (UTC-3), segunda a sexta
+    - cron: "0 22 * * 1-5"    # 19:00 em Brasília: guarda o fechamento do pregão do dia
   workflow_dispatch:           # botão "Run workflow" para coletar na hora
   push:
     branches: [main]
