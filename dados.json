@@ -1,5 +1,5 @@
 {
-  "coletadoEm": "2026-11-24T21:12:47",
+  "coletadoEm": "2026-11-24T21:14:12",
   "win": {
     "fonte": "B3",
     "simbolo": "WINZ26",
@@ -14,16 +14,16 @@
     "fonte": "Yahoo Finance",
     "titulo": "E-Mini S&P 500 Dec 26",
     "url": "https://finance.yahoo.com/quote/ES=F",
-    "ultimo": 7194.5,
-    "variacaoPct": -0.32,
-    "horaSite": "24/11 21:02"
+    "ultimo": 7196.75,
+    "variacaoPct": -0.29,
+    "horaSite": "24/11 21:04"
   },
   "vix": {
     "fonte": "CNBC",
     "titulo": "VIX Futuro VXZ26 (venc. 2026-12-16)",
     "url": "https://www.cnbc.com/quotes/@VX.1",
-    "ultimo": 24.45,
-    "variacaoPct": 1.97,
-    "horaSite": "7:01 PM EST"
+    "ultimo": 24.41,
+    "variacaoPct": 1.81,
+    "horaSite": "7:03 PM EST"
   }
 }
