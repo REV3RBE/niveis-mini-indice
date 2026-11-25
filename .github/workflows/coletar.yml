@@ -22,13 +22,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # O cron do GitHub é só reserva (atrasa ou falha); quem dispara às 8:50 é o PC.
+      # Se a coleta de hoje já foi feita, o cron não coleta de novo (uma coleta por dia).
+      - name: Conferir se já coletou hoje
+        id: hoje
+        run: |
+          hoje=$(TZ=America/Sao_Paulo date '+%Y-%m-%d')
+          if [ "${{ github.event_name }}" = "schedule" ] && grep -q "\"coletadoEm\": \"$hoje" dados.json; then
+            echo "pular=true" >> "$GITHUB_OUTPUT"; echo "Coleta de $hoje já feita; nada a coletar."
+          else
+            echo "pular=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Coletar fechamento (B3), S&P e VIX
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.hoje.outputs.pular != 'true'
         shell: pwsh
         run: ./coletar-site.ps1
 
       - name: Guardar dados no repositório
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.hoje.outputs.pular != 'true'
         run: |
           git config user.name "coleta-niveis"
           git config user.email "coleta-niveis@users.noreply.github.com"
