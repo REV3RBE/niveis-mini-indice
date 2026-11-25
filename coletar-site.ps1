@@ -77,21 +77,36 @@ function Get-VIX {
     return $v
 }
 
-# B3: ajuste do ultimo pregao do WIN vigente (vencimento mais proximo depois de hoje).
+# B3: fechamento do ultimo pregao do WIN vigente (vencimento mais proximo depois de hoje).
+# Fechamento = closPric do ultimo candle de 1 minuto do pregao (leilao de fechamento),
+# igual ao candle diario do grafico. NAO usar o ajuste nem o curPrc.
 function Get-WIN($hojeISO) {
     $j = Get-Json 'https://cotacao.b3.com.br/mds/api/v1/DerivativeQuotation/WIN'
     $c = @($j.Scty) | Where-Object { $_.asset.AsstSummry.mtrtyCode -gt $hojeISO -and $_.SctyQtn.prvsDayAdjstmntPric } |
         Sort-Object { $_.asset.AsstSummry.mtrtyCode } | Select-Object -First 1
-    if ($null -eq $c) { throw 'Nenhum contrato WIN com ajuste na resposta da B3' }
+    if ($null -eq $c) { throw 'Nenhum contrato WIN vigente na resposta da B3' }
+    $simb = [string]$c.symb
+    $h = Get-Json "https://cotacao.b3.com.br/mds/api/v1/DailyFluctuationHistory/$simb"
+    $barras = @($h.TradgFlr.scty.lstQtn)
+    if ($barras.Count -eq 0 -or -not $barras[-1].closPric) { throw "A B3 ainda nao tem os candles do pregao de $simb" }
     return [ordered]@{
         fonte      = 'B3'
-        simbolo    = [string]$c.symb
+        simbolo    = $simb
         vencimento = [string]$c.asset.AsstSummry.mtrtyCode
-        fechamento = [double]$c.SctyQtn.prvsDayAdjstmntPric
-        ultimo     = if ($c.SctyQtn.curPrc) { [double]$c.SctyQtn.curPrc } else { $null }
-        horaB3     = [string]$j.Msg.dtTm
+        fechamento = [double]$barras[-1].closPric
+        dataPregao = [string]$h.TradgFlr.date
+        horaUltimoCandle = [string]$barras[-1].dtTm
+        ajuste     = [double]$c.SctyQtn.prvsDayAdjstmntPric
         url        = 'https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/'
     }
+}
+
+# Fechamento da coleta anterior (dados.json do repositorio), se a B3 estiver sem candles agora.
+function Get-WINAnterior {
+    $arq = Join-Path $base 'dados.json'
+    if (-not (Test-Path $arq)) { return $null }
+    try { $w = ([IO.File]::ReadAllText($arq, [Text.Encoding]::UTF8) | ConvertFrom-Json).win; if ($w -and $w.dataPregao) { return $w } } catch {}
+    return $null
 }
 
 $agoraUtc = [DateTime]::UtcNow
@@ -105,7 +120,11 @@ try {
     exit 1
 }
 $win = $null
-try { $win = Get-WIN $agoraBR.ToString('yyyy-MM-dd') } catch { Write-Host "AVISO B3: $($_.Exception.Message)" }
+try { $win = Get-WIN $agoraBR.ToString('yyyy-MM-dd') } catch {
+    Write-Host "AVISO B3: $($_.Exception.Message)"
+    $win = Get-WINAnterior
+    if ($win) { Write-Host "AVISO B3: mantido o fechamento da coleta anterior (pregao de $($win.dataPregao))" }
+}
 
 $dados = [ordered]@{
     coletadoEm = $agoraBR.ToString('yyyy-MM-ddTHH:mm:ss')

@@ -155,7 +155,7 @@
           </div>
           <div class="tiles">
             <div class="tile fech">
-              <span class="tile-label">Fechamento do índice futuro (ajuste B3)</span>
+              <span class="tile-label">Fechamento do índice futuro (último pregão)</span>
               <span class="val grande" id="fechamento">—</span>
               <span class="sub" id="fechInfo"></span>
             </div>
@@ -268,8 +268,9 @@ function iniciar(D) {
   var FECH = D && D.win ? D.win.fechamento : NaN;
   if (D && D.win) {
     $('fechamento').textContent = fmtInt.format(FECH);
-    var venc = D.win.vencimento.split('-');
-    $('fechInfo').textContent = D.win.simbolo + ' (venc. ' + venc[2] + '/' + venc[1] + ') · ajuste do último pregão · B3';
+    var venc = D.win.vencimento.split('-'), pg = (D.win.dataPregao || '').split('-');
+    $('fechInfo').textContent = (pg.length === 3 ? 'Pregão de ' + pg[2] + '/' + pg[1] + ' · ' : '') +
+      D.win.simbolo + ' (venc. ' + venc[2] + '/' + venc[1] + ') · B3';
   } else {
     $('fechInfo').textContent = D ? 'A B3 não respondeu na última coleta' : '';
   }
@@ -290,7 +291,7 @@ function iniciar(D) {
       ' · <a href="' + D.vix.url + '" target="_blank" rel="noopener">VIX futuro (' + fonteDe(D.vix) + ')</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-500-futures" target="_blank" rel="noopener">S&amp;P no Investing</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-vix-futures" target="_blank" rel="noopener">VIX no Investing</a>' +
-      '<br>Fechamento (ajuste da B3), S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda todo dia útil às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
+      '<br>Fechamento do último pregão (B3), S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda todo dia útil às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
   }
 
   // ---- Situação da coleta ----
