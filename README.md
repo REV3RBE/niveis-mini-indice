@@ -13,7 +13,7 @@ Os pregões do ano são calculados na própria página: segunda a sexta, menos o
 
 ## Coleta automática
 
-O GitHub Actions (`.github/workflows/coletar.yml`) roda `coletar-site.ps1` de segunda a sexta às 8:50 e às 19:00 de Brasília (a das 19:00 guarda o fechamento do pregão do dia). Ele busca:
+O GitHub Actions (`.github/workflows/coletar.yml`) roda `coletar-site.ps1` uma vez por dia, todos os dias, às 8:50 de Brasília. Ele busca:
 
 - Fechamento do WIN vigente: B3, último candle do pregão
 
