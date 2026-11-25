@@ -2,7 +2,12 @@ name: Coleta e publicação
 
 on:
   schedule:
-    - cron: "50 11 * * *"     # uma coleta por dia, todos os dias, às 8:50 em Brasília (UTC-3)
+    # Uma coleta por dia, às 8:50 em Brasília (UTC-3). O cron do GitHub às vezes falha ou atrasa,
+    # por isso há novas tentativas até 8:59; a primeira que rodar coleta e as outras pulam (ver "Conferir se já coletou hoje").
+    - cron: "50 11 * * *"
+    - cron: "53 11 * * *"
+    - cron: "56 11 * * *"
+    - cron: "59 11 * * *"
   workflow_dispatch:           # botão "Run workflow" para coletar na hora
     inputs:
       teste:
