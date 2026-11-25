@@ -433,10 +433,17 @@ function iniciar(D) {
   function desenharAnel(id, frac, centro, rotulo, cor) {
     var cx = 80, cy = 80, r = 58, A0 = -Math.PI / 2, h = '';
     h += '<circle cx="' + cx + '" cy="' + cy + '" r="74" fill="none" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="1.5 3.5"/>';
-    h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="var(--tile-2)" stroke-width="13"/>';
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#161616" stroke-width="14"/>';
     if (frac > 0) {
-      var f = Math.min(frac, .999), a1 = A0 + Math.PI * 2 * f;
-      h += '<path d="' + arco(cx, cy, r, A0, a1) + '" fill="none" stroke="' + (cor || 'var(--white)') + '" stroke-width="13" stroke-linecap="round"/>';
+      // Arco em degradê do preto (início, no alto) até o branco (valor atual), em pequenos trechos.
+      var f = Math.min(frac, .999), a1 = A0 + Math.PI * 2 * f, N = Math.max(8, Math.round(120 * f));
+      for (var s = 0; s < N; s++) {
+        var t0 = A0 + (a1 - A0) * s / N, t1 = A0 + (a1 - A0) * Math.min(1, (s + 1.6) / N), c = Math.round(18 + 237 * Math.pow((s + 1) / N, 1.25));
+        h += '<path d="' + arco(cx, cy, r, t0, Math.min(t1, a1)) + '" fill="none" stroke="rgb(' + c + ',' + c + ',' + c + ')" stroke-width="14"/>';
+      }
+      var hx = cx + r * Math.cos(a1), hy = cy + r * Math.sin(a1);
+      h += '<circle cx="' + hx.toFixed(2) + '" cy="' + hy.toFixed(2) + '" r="10" fill="#fff" opacity=".18"/>' +
+           '<circle cx="' + hx.toFixed(2) + '" cy="' + hy.toFixed(2) + '" r="7" fill="#fff"/>';
     }
     h += '<circle cx="' + cx + '" cy="' + cy + '" r="44" fill="var(--card-2)" stroke="var(--line)"/>';
     h += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" fill="var(--fg)" font-size="20" font-weight="600"' + FONT + '>' + centro + '</text>';
