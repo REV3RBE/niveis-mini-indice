@@ -28,7 +28,7 @@ jobs:
         id: hoje
         run: |
           hoje=$(TZ=America/Sao_Paulo date '+%Y-%m-%d')
-          if [ "${{ github.event_name }}" = "schedule" ] && grep -q "\"coletadoEm\": \"$hoje" dados.json; then
+          if [ "${{ github.event_name }}" = "schedule" ] && grep -Eq "\"coletadoEm\": *\"$hoje" dados.json; then
             echo "pular=true" >> "$GITHUB_OUTPUT"; echo "Coleta de $hoje já feita; nada a coletar."
           else
             echo "pular=false" >> "$GITHUB_OUTPUT"
