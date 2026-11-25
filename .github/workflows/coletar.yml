@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "50 11 * * *"     # uma coleta por dia, todos os dias, às 8:50 em Brasília (UTC-3)
   workflow_dispatch:           # botão "Run workflow" para coletar na hora
+    inputs:
+      teste:
+        description: 'Teste: coleta e mostra o resultado, sem gravar nem publicar'
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -39,8 +44,12 @@ jobs:
         shell: pwsh
         run: ./coletar-site.ps1
 
+      - name: Resultado do teste (nada é gravado nem publicado)
+        if: inputs.teste
+        run: cat dados.json
+
       - name: Guardar dados no repositório
-        if: github.event_name != 'push' && steps.hoje.outputs.pular != 'true'
+        if: github.event_name != 'push' && steps.hoje.outputs.pular != 'true' && !inputs.teste
         run: |
           git config user.name "coleta-niveis"
           git config user.email "coleta-niveis@users.noreply.github.com"
@@ -49,12 +58,15 @@ jobs:
           git push
 
       - uses: actions/configure-pages@v5
+        if: ${{ !inputs.teste }}
       - uses: actions/upload-pages-artifact@v3
+        if: ${{ !inputs.teste }}
         with:
           path: .
 
   publicar:
     needs: coletar
+    if: ${{ !inputs.teste }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
