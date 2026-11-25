@@ -291,7 +291,7 @@ function iniciar(D) {
       ' · <a href="' + D.vix.url + '" target="_blank" rel="noopener">VIX futuro (' + fonteDe(D.vix) + ')</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-500-futures" target="_blank" rel="noopener">S&amp;P no Investing</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-vix-futures" target="_blank" rel="noopener">VIX no Investing</a>' +
-      '<br>Fechamento do último pregão (B3), S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda todo dia útil às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
+      '<br>Fechamento do último pregão (B3), S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda uma vez por dia, às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
   }
 
   // ---- Situação da coleta ----
@@ -305,7 +305,7 @@ function iniciar(D) {
       (D ? ' Os valores abaixo são da coleta anterior.' : '');
   } else if (!D) {
     aviso.className = 'aviso warn'; aviso.hidden = false;
-    aviso.textContent = 'Ainda não há coleta. A primeira roda no próximo dia útil às 8:50.';
+    aviso.textContent = 'Ainda não há coleta. A próxima roda às 8:50.';
   } else {
     estado = (reserva || antigo) ? 'warn' : 'ok';
     txt = 'Coletado ' + (antigo ? 'em ' + dataBR(D.coletadoEm) : 'hoje às ' + D.coletadoEm.slice(11, 16)) +
