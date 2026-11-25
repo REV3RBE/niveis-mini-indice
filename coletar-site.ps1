@@ -77,6 +77,26 @@ function Get-VIX {
     return $v
 }
 
+# B3: ajuste do ultimo pregao do WIN vigente (vencimento mais proximo depois de hoje).
+function Get-WIN($hojeISO) {
+    $j = Get-Json 'https://cotacao.b3.com.br/mds/api/v1/DerivativeQuotation/WIN'
+    $c = @($j.Scty) | Where-Object { $_.asset.AsstSummry.mtrtyCode -gt $hojeISO -and $_.SctyQtn.prvsDayAdjstmntPric } |
+        Sort-Object { $_.asset.AsstSummry.mtrtyCode } | Select-Object -First 1
+    if ($null -eq $c) { throw 'Nenhum contrato WIN com ajuste na resposta da B3' }
+    return [ordered]@{
+        fonte      = 'B3'
+        simbolo    = [string]$c.symb
+        vencimento = [string]$c.asset.AsstSummry.mtrtyCode
+        fechamento = [double]$c.SctyQtn.prvsDayAdjstmntPric
+        ultimo     = if ($c.SctyQtn.curPrc) { [double]$c.SctyQtn.curPrc } else { $null }
+        horaB3     = [string]$j.Msg.dtTm
+        url        = 'https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/cotacoes/'
+    }
+}
+
+$agoraUtc = [DateTime]::UtcNow
+$agoraBR = if ($fusoBR) { [TimeZoneInfo]::ConvertTimeFromUtc($agoraUtc, $fusoBR) } else { $agoraUtc.AddHours(-3) }
+
 try {
     $sp  = Get-SP
     $vix = Get-VIX
@@ -84,20 +104,27 @@ try {
     Write-Host "ERRO: $($_.Exception.Message)"
     exit 1
 }
+$win = $null
+try { $win = Get-WIN $agoraBR.ToString('yyyy-MM-dd') } catch { Write-Host "AVISO B3: $($_.Exception.Message)" }
 
-$agoraUtc = [DateTime]::UtcNow
-$agoraBR = if ($fusoBR) { [TimeZoneInfo]::ConvertTimeFromUtc($agoraUtc, $fusoBR) } else { $agoraUtc.AddHours(-3) }
 $dados = [ordered]@{
     coletadoEm = $agoraBR.ToString('yyyy-MM-ddTHH:mm:ss')
+    win = $win
     sp  = $sp
     vix = $vix
 }
 [IO.File]::WriteAllText((Join-Path $base 'dados.json'), ($dados | ConvertTo-Json -Depth 4), $utf8)
 
 $hist = Join-Path $base 'historico.csv'
-if (-not (Test-Path $hist)) { [IO.File]::WriteAllText($hist, "data;hora;sp_contrato;sp_variacao_pct;vix_contrato;vix_cotacao`n", $utf8) }
-$linha = '{0};{1};{2};{3};{4};{5}' -f $agoraBR.ToString('dd/MM/yyyy'), $agoraBR.ToString('HH:mm'), $sp.titulo,
-    $sp.variacaoPct.ToString('0.00', $inv).Replace('.', ','), $vix.titulo, $vix.ultimo.ToString('0.00', $inv).Replace('.', ',')
+$cab = 'data;hora;sp_contrato;sp_variacao_pct;vix_contrato;vix_cotacao;win_contrato;win_fechamento'
+if (-not (Test-Path $hist)) { [IO.File]::WriteAllText($hist, "$cab`n", $utf8) }
+else {
+    $linhas = [IO.File]::ReadAllLines($hist, $utf8)
+    if ($linhas.Count -gt 0 -and $linhas[0] -notmatch 'win_') { $linhas[0] = $cab; [IO.File]::WriteAllText($hist, (($linhas -join "`n") + "`n"), $utf8) }
+}
+$linha = '{0};{1};{2};{3};{4};{5};{6};{7}' -f $agoraBR.ToString('dd/MM/yyyy'), $agoraBR.ToString('HH:mm'), $sp.titulo,
+    $sp.variacaoPct.ToString('0.00', $inv).Replace('.', ','), $vix.titulo, $vix.ultimo.ToString('0.00', $inv).Replace('.', ','),
+    $(if ($win) { $win.simbolo } else { '' }), $(if ($win) { $win.fechamento.ToString('0', $inv) } else { '' })
 [IO.File]::AppendAllText($hist, "$linha`n", $utf8)
 
-Write-Host ("OK  S&P var {0}%  VIX {1}" -f $sp.variacaoPct, $vix.ultimo)
+Write-Host ("OK  S&P var {0}%  VIX {1}  WIN {2}" -f $sp.variacaoPct, $vix.ultimo, $(if ($win) { "$($win.simbolo) $($win.fechamento)" } else { 'sem dado da B3' }))

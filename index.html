@@ -66,6 +66,7 @@
     font: 600 26px var(--font); font-variant-numeric: tabular-nums; padding: 2px 0; }
   .tile input::placeholder { color: var(--faint); font-weight: 400; }
   .tile .val { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .tile .val.grande { font-size: 26px; }
   .tile .sub { font-size: 11px; color: var(--muted); }
   .tile.max .val { color: var(--up); } .tile.min .val { color: var(--down); }
   .tile.pj { border-color: rgba(255, 90, 31, .45); background: linear-gradient(160deg, rgba(255, 90, 31, .16), var(--tile) 60%); }
@@ -153,10 +154,11 @@
             <div class="acoes"><button class="btn cheio" id="copiar" type="button">Copiar níveis</button></div>
           </div>
           <div class="tiles">
-            <label class="tile fech">
-              <span class="tile-label">Fechamento do índice futuro (ontem)</span>
-              <input id="fechamento" inputmode="decimal" placeholder="ex.: 170.714" autocomplete="off">
-            </label>
+            <div class="tile fech">
+              <span class="tile-label">Fechamento do índice futuro (ajuste B3)</span>
+              <span class="val grande" id="fechamento">—</span>
+              <span class="sub" id="fechInfo"></span>
+            </div>
             <div class="tile max"><span class="tile-label">Máxima</span><span class="val" id="max">—</span><span class="sub" id="maxT"></span></div>
             <div class="tile pj"><span class="tile-label">Preço justo</span><span class="val" id="pj">—</span><span class="sub" id="pjT"></span></div>
             <div class="tile min"><span class="tile-label">Mínima</span><span class="val" id="min">—</span><span class="sub" id="minT"></span></div>
@@ -222,8 +224,6 @@ function iniciar(D) {
   var tick5 = function (v) { return Math.round(v / 5) * 5; };
   var sinalPts = function (v) { return (v >= 0 ? '+' : '−') + fmtInt.format(Math.abs(v)) + ' pts'; };
   var sinalPct = function (v) { return (v >= 0 ? '+' : '−') + fmt2.format(Math.abs(v)) + '%'; };
-  function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  function ler(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function hojeISO() {
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -265,6 +265,14 @@ function iniciar(D) {
   var anoVigente = new Date().getFullYear();
   var DIAS = pregoesB3(anoVigente);
   var SP = D ? D.sp.variacaoPct : NaN, VIX = D ? D.vix.ultimo : NaN;
+  var FECH = D && D.win ? D.win.fechamento : NaN;
+  if (D && D.win) {
+    $('fechamento').textContent = fmtInt.format(FECH);
+    var venc = D.win.vencimento.split('-');
+    $('fechInfo').textContent = D.win.simbolo + ' (venc. ' + venc[2] + '/' + venc[1] + ') · ajuste do último pregão · B3';
+  } else {
+    $('fechInfo').textContent = D ? 'A B3 não respondeu na última coleta' : '';
+  }
   var fonteDe = function (x) { return x.fonte || 'Investing.com'; };
 
   var hojeTxt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -282,12 +290,12 @@ function iniciar(D) {
       ' · <a href="' + D.vix.url + '" target="_blank" rel="noopener">VIX futuro (' + fonteDe(D.vix) + ')</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-500-futures" target="_blank" rel="noopener">S&amp;P no Investing</a>' +
       ' · <a href="https://br.investing.com/indices/us-spx-vix-futures" target="_blank" rel="noopener">VIX no Investing</a>' +
-      '<br>S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda todo dia útil às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
+      '<br>Fechamento (ajuste da B3), S&amp;P, VIX e dias úteis são preenchidos automaticamente; a coleta roda todo dia útil às 8:50. O Investing.com não permite coleta automática, por isso o site usa Yahoo Finance e CNBC. As cotações podem ter atraso.';
   }
 
   // ---- Situação da coleta ----
   var aviso = $('aviso'), estado = 'none', txt = 'Sem coleta';
-  var reserva = false; // no site as fontes são sempre Yahoo Finance e CNBC
+  var reserva = false; // no site as fontes são sempre B3, Yahoo Finance e CNBC
   var antigo = D && D.coletadoEm.slice(0, 10) !== hojeISO();
   if (E) {
     estado = 'err'; txt = 'Coleta falhou ' + dataBR(E.em);
@@ -300,13 +308,17 @@ function iniciar(D) {
   } else {
     estado = (reserva || antigo) ? 'warn' : 'ok';
     txt = 'Coletado ' + (antigo ? 'em ' + dataBR(D.coletadoEm) : 'hoje às ' + D.coletadoEm.slice(11, 16)) +
-      ' · ' + fonteDe(D.sp) + ' e ' + fonteDe(D.vix);
+      ' · B3, ' + fonteDe(D.sp) + ' e ' + fonteDe(D.vix);
     if (reserva) {
       aviso.className = 'aviso warn'; aviso.hidden = false;
       aviso.textContent = 'O Investing.com bloqueou a coleta automática; foi usada a fonte reserva (' +
         [D.sp.fonte, D.vix.fonte].filter(function (f) { return f !== 'Investing.com'; }).join(' e ') +
         '). Os valores podem diferir um pouco do Investing (links no fim da página).' +
         (antigo ? ' Os dados são de ' + dataBR(D.coletadoEm) + '.' : '');
+    } else if (!D.win) {
+      estado = 'warn';
+      aviso.className = 'aviso warn'; aviso.hidden = false;
+      aviso.textContent = 'A B3 não respondeu na última coleta, por isso o fechamento do índice futuro está vazio. A próxima coleta automática tenta de novo.';
     } else if (antigo) {
       aviso.className = 'aviso warn'; aviso.hidden = false;
       aviso.textContent = 'Atenção: os dados são de ' + dataBR(D.coletadoEm) + ', não de hoje.';
@@ -353,7 +365,7 @@ function iniciar(D) {
     h += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#grade)" opacity=".55"/>';
     var tip = $('tip');
     if (f == null) {
-      h += '<text x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle" fill="var(--muted)" font-size="14" font-family="Manrope, Segoe UI, sans-serif">Digite o fechamento de ontem para ver a faixa do dia</text>';
+      h += '<text x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle" fill="var(--muted)" font-size="14" font-family="Manrope, Segoe UI, sans-serif">Sem dados suficientes da última coleta para desenhar a faixa</text>';
       svg.innerHTML = h; tip.hidden = true; return;
     }
     var lo = Math.min(min, f), hi = Math.max(max, f), pad = (hi - lo) * 0.08;
@@ -389,13 +401,10 @@ function iniciar(D) {
   }
 
   // ---- Cálculo ----
-  var salvo = ler('fechamento');
-  if (salvo) $('fechamento').value = salvo;
   var ultimo = null;
   var dash = function (ids) { ids.forEach(function (i) { $(i).textContent = '—'; }); };
   function calcular() {
-    var f = num($('fechamento').value, true);
-    guardar('fechamento', $('fechamento').value);
+    var f = FECH;
     var taxa = VIX > 0 ? VIX / Math.sqrt(DIAS) : NaN;
     desenharGauge(taxa);
     if (!(f > 0) || isNaN(SP) || !(VIX > 0)) {
@@ -416,10 +425,8 @@ function iniciar(D) {
     desenharFaixa(f, pj, max, min);
     ultimo = { pj: pj, max: max, min: min };
   }
-  $('fechamento').addEventListener('input', calcular);
-
   $('copiar').addEventListener('click', function () {
-    if (!ultimo) { $('fechamento').focus(); return; }
+    if (!ultimo) return;
     var t = 'MÁX ' + fmtInt.format(ultimo.max) + ' | PJ ' + fmtInt.format(ultimo.pj) + ' | MÍN ' + fmtInt.format(ultimo.min);
     var ok = function () { $('copiar').textContent = 'Copiado'; setTimeout(function () { $('copiar').textContent = 'Copiar níveis'; }, 1500); };
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { prompt('Copie:', t); });
@@ -427,7 +434,6 @@ function iniciar(D) {
   });
 
   calcular();
-  if (!$('fechamento').value) $('fechamento').focus();
 }
 fetch('dados.json', { cache: 'no-store' })
   .then(function (r) { return r.ok ? r.json() : null; })
