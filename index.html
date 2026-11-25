@@ -2,125 +2,146 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Níveis Mini Índice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap">
 <style>
-  /* Layout: painel escuro com trilho à esquerda, brilho laranja no topo; coluna larga (níveis + faixa) e coluna estreita (mercado + medidor) */
+  /* Layout: painel escuro numa tela só (sem rolagem) no computador, escalado pela altura da tela e centralizado
+     em telas ultrawide; brilho laranja fixo cobrindo a tela inteira. No celular, cartões empilhados. */
   :root {
-    --bg: #0d0d0e; --frame: #121213; --card: #18181a; --tile: #212124; --line: #2b2b2f;
-    --fg: #f3f1ee; --muted: #8e8a85; --faint: #5c5955;
-    --accent: #ff5a1f; --accent-2: #ff3d8b; --glow: rgba(255, 90, 31, .55);
+    --bg: #0d0d0e; --frame: rgba(18, 18, 19, .72); --card: #18181a; --tile: #212124; --line: #2b2b2f;
+    --fg: #f3f1ee; --muted: #8e8a85; --faint: #5c5955; --white: #ffffff; --ink: #1a0d06;
+    --accent: #ff5a1f; --accent-2: #ff3d8b;
     --up: #3fd17f; --up-bg: rgba(63, 209, 127, .14); --down: #ff5f57; --down-bg: rgba(255, 95, 87, .14);
     --warn: #ffb25b; --warn-bg: rgba(255, 140, 40, .12);
     --font: "Manrope", "Segoe UI", system-ui, sans-serif;
+    --gap: 1.25rem;
     color-scheme: dark;
   }
+  /* Escala única: 1rem acompanha a altura da tela (e a largura, quando ela é o limite). 720p ≈ 11px, 1080p ≈ 16px, 4K ≈ 32px. */
+  html { font-size: clamp(11px, min(1.5dvh, .86vw), 40px); height: 100%; scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body { background: var(--bg); color: var(--fg); font: 400 15px/1.45 var(--font); font-variant-numeric: tabular-nums; }
-  .app { display: grid; grid-template-columns: 76px minmax(0, 1fr); min-height: 100vh; max-width: 1280px; margin: 0 auto; }
-  .rail { background: var(--frame); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 28px; padding-block: 26px; }
-  .logo { width: 30px; height: 30px; }
-  .rail .dot { margin-top: auto; width: 10px; height: 10px; border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 4px var(--tile); }
+  body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font: 400 1rem/1.45 var(--font);
+         font-variant-numeric: tabular-nums; overflow: hidden; }
+  /* Brilho de fundo: fixo e do tamanho da janela, então preenche qualquer proporção sem cortes. */
+  body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 75% 60% at 70% -12%, rgba(255, 90, 31, .58), rgba(255, 90, 31, .18) 42%, rgba(255, 90, 31, .04) 68%, transparent 82%),
+      radial-gradient(ellipse 45% 40% at 12% -5%, rgba(255, 61, 139, .10), transparent 70%); }
+
+  .app { position: relative; z-index: 1; display: grid; grid-template-columns: 4.5rem minmax(0, 1fr);
+         height: 100dvh; width: 100%; max-width: calc(100dvh * 2.15); margin: 0 auto; }
+  .rail { background: var(--frame); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center;
+          gap: 1.75rem; padding-block: 1.6rem; }
+  .logo { width: 1.9rem; height: 1.9rem; }
+  .rail .dot { margin-top: auto; width: .65rem; height: .65rem; border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 .25rem var(--tile); }
   .rail .dot.ok { background: var(--up); } .rail .dot.warn { background: var(--warn); } .rail .dot.err { background: var(--down); }
 
-  .main { position: relative; overflow: hidden; padding: 22px 28px 40px; display: grid; gap: 22px; align-content: start; }
-  .main::before { content: ""; position: absolute; inset: 0 0 auto; height: 340px; z-index: 0; pointer-events: none;
-    background: radial-gradient(120% 100% at 75% 0%, rgba(255, 90, 31, .55), rgba(255, 90, 31, .14) 45%, transparent 75%); }
-  .main > * { position: relative; z-index: 1; }
+  .main { display: flex; flex-direction: column; gap: var(--gap); min-height: 0; min-width: 0; height: 100dvh;
+          padding: 1.3rem 2rem 1rem; }
 
-  .top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .date { font-size: 13px; color: var(--fg); opacity: .85; display: flex; align-items: center; gap: 8px; }
-  .linha-nota { margin: 12px 0 0; }
-  .status { margin-left: auto; display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .08);
-    border-radius: 12px; padding: 8px 14px; font-size: 13px; backdrop-filter: blur(6px); }
-  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: none; }
+  .date { font-size: .85rem; opacity: .85; }
+  .status { margin-left: auto; display: flex; align-items: center; gap: .6rem; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: .75rem; padding: .5rem .9rem; font-size: .82rem; backdrop-filter: blur(6px); }
+  .status i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--faint); flex: none; }
   .status.ok i { background: var(--up); } .status.warn i { background: var(--warn); } .status.err i { background: var(--down); }
-  .badge-win { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-  .badge-win b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--tile); border: 1px solid var(--line); font-size: 11px; letter-spacing: .04em; }
-  .badge-win small { display: block; color: var(--muted); font-size: 11px; }
+  .badge-win { display: flex; align-items: center; gap: .6rem; font-size: .82rem; }
+  .badge-win b { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: var(--tile); border: 1px solid var(--line); font-size: .7rem; letter-spacing: .04em; }
+  .badge-win small { display: block; color: var(--muted); font-size: .7rem; }
 
-  .aviso { border-radius: 14px; padding: 12px 16px; font-size: 14px; }
+  .aviso { flex: none; border-radius: .9rem; padding: .7rem 1rem; font-size: .85rem; }
   .aviso.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(255, 178, 91, .25); }
   .aviso.err { background: var(--down-bg); color: var(--down); border: 1px solid rgba(255, 95, 87, .3); }
 
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; }
-  .col { display: grid; gap: 22px; align-content: start; min-width: 0; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 26px; min-width: 0; box-shadow: 0 20px 40px rgba(0, 0, 0, .35); }
-  .card-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-  .card-head h1, .card-head h2 { margin: 0; font-weight: 300; letter-spacing: -.01em; text-wrap: balance; }
-  .card-head h1 { font-size: 30px; }
-  .card-head h2 { font-size: 19px; font-weight: 500; }
-  .card-head .acoes { margin-left: auto; display: flex; gap: 8px; }
-  .btn { font: 500 12px var(--font); border-radius: 8px; padding: 7px 14px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent); }
-  .btn.cheio { background: var(--accent); color: #1a0d06; }
+  .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 24rem; gap: var(--gap); }
+  .col { display: flex; flex-direction: column; gap: var(--gap); min-height: 0; min-width: 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 1.3rem; padding: 1.5rem; min-width: 0;
+          box-shadow: 0 1.2rem 2.5rem rgba(0, 0, 0, .35); }
+  .card-head { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+  .card-head h1, .card-head h2 { margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+  .card-head h1 { font-size: 1.9rem; font-weight: 300; }
+  .card-head h2 { font-size: 1.2rem; font-weight: 500; }
+  .card-head .acoes { margin-left: auto; display: flex; gap: .5rem; }
+  .btn { font: 500 .78rem var(--font); border-radius: .5rem; padding: .45rem .9rem; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--ink); }
   .btn:hover { filter: brightness(1.12); }
-  .btn:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  .tiles { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 12px; }
-  .tile { background: var(--tile); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: grid; gap: 4px; align-content: center; min-width: 0; }
-  .tile-label { font-size: 12px; color: var(--muted); }
-  .tile input { width: 100%; background: transparent; border: 0; border-bottom: 1px dashed var(--faint); color: var(--fg);
-    font: 600 26px var(--font); font-variant-numeric: tabular-nums; padding: 2px 0; }
-  .tile input::placeholder { color: var(--faint); font-weight: 400; }
-  .tile .val { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
-  .tile .val.grande { font-size: 26px; }
-  .tile .sub { font-size: 11px; color: var(--muted); }
+  .niveis { flex: none; }
+  .tiles { display: grid; grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 1fr)); gap: .75rem; }
+  .tile { background: var(--tile); border: 1px solid var(--line); border-radius: 1rem; padding: .9rem 1rem; display: grid; gap: .25rem;
+          align-content: center; min-width: 0; }
+  .tile-label { font-size: .75rem; color: var(--muted); }
+  .tile .val { font-size: 1.45rem; font-weight: 600; letter-spacing: -.01em; }
+  .tile .val.grande { font-size: 1.75rem; }
+  .tile .sub { font-size: .7rem; color: var(--muted); }
   .tile.max .val { color: var(--up); } .tile.min .val { color: var(--down); }
   .tile.pj { border-color: rgba(255, 90, 31, .45); background: linear-gradient(160deg, rgba(255, 90, 31, .16), var(--tile) 60%); }
-  .tile.pj .val { color: var(--fg); }
 
-  .resumo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
-  .resumo .mark { width: 44px; height: 44px; border-radius: 12px; background: var(--tile); border: 1px solid var(--line); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--accent); }
-  .resumo small { display: block; color: var(--muted); font-size: 12px; }
-  .resumo strong { font-size: 22px; font-weight: 600; }
-  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 3px 8px; }
+  .faixa { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .faixa .card-head { margin-bottom: .6rem; }
+  .resumo { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; flex: none; margin-bottom: .4rem; }
+  .resumo .mark { width: 2.75rem; height: 2.75rem; border-radius: .75rem; background: var(--tile); border: 1px solid var(--line); display: grid;
+                  place-items: center; font-size: .7rem; font-weight: 700; color: var(--accent); }
+  .resumo small { display: block; color: var(--muted); font-size: .75rem; }
+  .resumo strong { font-size: 1.4rem; font-weight: 600; }
+  .chip { display: inline-block; font-size: .75rem; font-weight: 600; border-radius: .4rem; padding: .2rem .5rem; }
   .chip.up { color: var(--up); background: var(--up-bg); } .chip.down { color: var(--down); background: var(--down-bg); }
-  .chart-wrap { position: relative; }
-  .chart-wrap svg { display: block; width: 100%; height: auto; }
-  .tip { position: absolute; top: 4px; transform: translateX(-50%); background: rgba(24, 24, 26, .92); border: 1px solid var(--line);
-    border-radius: 12px; padding: 8px 12px; white-space: nowrap; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); pointer-events: none; }
-  .tip small { display: block; color: var(--muted); font-size: 11px; }
-  .tip b { font-size: 20px; font-weight: 600; margin-right: 8px; }
+  .chart-wrap { position: relative; flex: 1; min-height: 0; }
+  .chart-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .tip { position: absolute; top: .3rem; transform: translateX(-50%); background: rgba(24, 24, 26, .92); border: 1px solid var(--line);
+         border-radius: .75rem; padding: .5rem .75rem; white-space: nowrap; box-shadow: 0 .6rem 1.9rem rgba(0, 0, 0, .5); pointer-events: none; }
+  .tip small { display: block; color: var(--muted); font-size: .7rem; }
+  .tip b { font-size: 1.25rem; font-weight: 600; margin-right: .5rem; }
   .tip[hidden] { display: none; }
 
-  .mercado { text-align: center; }
-  .mercado .eyebrow { font-size: 12px; color: var(--muted); }
-  .mercado h2 { margin: 6px 0 18px; font-size: 22px; font-weight: 300; }
-  .linhas { display: grid; gap: 10px; text-align: left; }
-  .linha { background: var(--tile); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; }
-  .linha .nome { font-size: 12px; color: var(--muted); }
-  .linha .num { font-size: 20px; font-weight: 600; text-align: right; grid-row: span 2; align-self: center; }
-  .linha .info { font-size: 11px; color: var(--faint); overflow-wrap: anywhere; }
-  .trava { font-size: 10px; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; }
+  .mercado { flex: none; }
+  .mercado .eyebrow { font-size: .75rem; color: var(--muted); text-align: center; }
+  .mercado h2 { margin: .35rem 0 1rem; font-size: 1.4rem; font-weight: 300; text-align: center; }
+  .linhas { display: grid; gap: .6rem; }
+  .linha { background: var(--tile); border: 1px solid var(--line); border-radius: .9rem; padding: .7rem .9rem; display: grid;
+           grid-template-columns: minmax(0, 1fr) auto; gap: .1rem .6rem; align-items: baseline; }
+  .linha .nome { font-size: .75rem; color: var(--muted); }
+  .linha .num { font-size: 1.25rem; font-weight: 600; text-align: right; grid-row: span 2; align-self: center; }
+  .linha .info { font-size: .68rem; color: var(--faint); overflow-wrap: anywhere; }
+  .linha-nota { margin: .8rem 0 0; text-align: center; }
+  .trava { font-size: .62rem; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; }
 
-  .gauge { text-align: center; }
-  .gauge svg { width: 100%; max-width: 240px; height: auto; display: block; margin: 0 auto; }
-  .gauge .rotulo { font-size: 13px; color: var(--fg); opacity: .85; }
-  .gauge .sub { font-size: 11px; color: var(--faint); margin-top: 2px; }
-  .gauge .pill { display: inline-block; margin-top: 14px; font-size: 11px; color: var(--muted); background: var(--tile); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+  .gauge { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; text-align: center; }
+  .gauge svg { flex: 1; min-height: 0; width: 100%; max-height: 15rem; display: block; }
+  .gauge .rotulo { font-size: .85rem; opacity: .85; }
+  .gauge .sub { font-size: .7rem; color: var(--faint); }
+  .gauge .pill { margin-top: .5rem; font-size: .7rem; color: var(--muted); background: var(--tile); border: 1px solid var(--line); border-radius: .5rem; padding: .4rem .75rem; }
 
-  .fonte { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .fonte { flex: none; margin: 0; font-size: .72rem; color: var(--muted); line-height: 1.6; }
   .fonte a { color: var(--fg); opacity: .8; }
 
-  @media (max-width: 980px) {
+  /* Celular, tablet em pé e janelas baixas: cartões empilhados e rolagem normal (sem barra visível). */
+  @media (max-width: 900px), (max-height: 520px) {
+    html { font-size: clamp(14px, 3.9vw, 16px); }
+    body { overflow-y: auto; }
+    .app { grid-template-columns: minmax(0, 1fr); height: auto; max-width: none; }
+    .rail { display: none; }
+    .main { height: auto; padding-block: 1rem 1.5rem;
+            padding-left: max(1rem, env(safe-area-inset-left, 0px)); padding-right: max(1rem, env(safe-area-inset-right, 0px)); }
+    .status { margin-left: 0; width: 100%; }
     .grid { grid-template-columns: minmax(0, 1fr); }
     .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .tile.fech { grid-column: 1 / -1; }
+    .chart-wrap { flex: none; height: 17rem; }
+    .gauge svg { flex: none; height: 11rem; }
   }
-  @media (max-width: 620px) {
-    .app { grid-template-columns: minmax(0, 1fr); }
-    .rail { display: none; }
-    .main { padding: 16px 16px 32px; }
-    .card { padding: 18px; border-radius: 18px; }
-    .card-head h1 { font-size: 24px; }
-    .tiles { grid-template-columns: minmax(0, 1fr); }
-    .status { margin-left: 0; width: 100%; }
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .tile, .card { transition: border-color .2s; }
+  @media (max-width: 560px) {
+    .card { padding: 1.1rem; border-radius: 1.1rem; }
+    .card-head h1 { font-size: 1.5rem; }
+    .tiles { gap: .5rem; }
+    .tile { padding: .7rem .65rem; border-radius: .8rem; }
+    .tile .val { font-size: 1.12rem; }
+    .tile .val.grande { font-size: 1.6rem; }
+    .tile .sub { font-size: .62rem; }
+    .chart-wrap { height: 15rem; }
   }
 </style>
 </head>
@@ -148,14 +169,14 @@
 
     <div class="grid">
       <div class="col">
-        <section class="card" aria-labelledby="t-niveis">
+        <section class="card niveis" aria-labelledby="t-niveis">
           <div class="card-head">
             <h1 id="t-niveis">Níveis de Hoje</h1>
-            <div class="acoes"><button class="btn cheio" id="copiar" type="button">Copiar níveis</button></div>
+            <div class="acoes"><button class="btn" id="copiar" type="button">Copiar níveis</button></div>
           </div>
           <div class="tiles">
             <div class="tile fech">
-              <span class="tile-label">Fechamento do índice futuro (último pregão)</span>
+              <span class="tile-label">Fechamento · último pregão</span>
               <span class="val grande" id="fechamento">—</span>
               <span class="sub" id="fechInfo"></span>
             </div>
@@ -165,7 +186,7 @@
           </div>
         </section>
 
-        <section class="card" aria-labelledby="t-faixa">
+        <section class="card faixa" aria-labelledby="t-faixa">
           <div class="card-head"><h2 id="t-faixa">Faixa do Dia</h2></div>
           <div class="resumo">
             <span class="mark">S&amp;P</span>
@@ -173,7 +194,7 @@
             <span class="chip" id="resChip"></span>
           </div>
           <div class="chart-wrap" id="chartWrap">
-            <svg id="chart" viewBox="0 0 640 280" role="img" aria-label="Fechamento de ontem, preço justo de abertura e faixa entre mínima e máxima"></svg>
+            <svg id="chart" role="img" aria-label="Fechamento de ontem, preço justo de abertura e faixa entre mínima e máxima"></svg>
             <div class="tip" id="tip" hidden><small>Preço justo / abertura</small><b id="tipVal"></b><span class="chip" id="tipChip"></span></div>
           </div>
         </section>
@@ -192,7 +213,7 @@
         </section>
 
         <section class="card gauge" aria-labelledby="t-taxa">
-          <svg id="gauge" viewBox="0 0 240 150" role="img" aria-labelledby="t-taxa"></svg>
+          <svg id="gauge" viewBox="0 0 240 150" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="t-taxa"></svg>
           <div class="rotulo" id="t-taxa">Taxa VIX diária</div>
           <div class="sub" id="taxaSub">VIX ÷ √dias úteis</div>
           <span class="pill" id="taxaPts">Oscilação esperada —</span>
@@ -212,15 +233,8 @@ function iniciar(D) {
   var $ = function (id) { return document.getElementById(id); };
   var fmtInt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
   var fmt2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  var SVGNS = 'http://www.w3.org/2000/svg';
+  var FONT = ' font-family="Manrope, Segoe UI, sans-serif"';
 
-  function num(s, milhar) {
-    s = String(s || '').trim().replace(/[%\s]/g, '');
-    if (!s) return NaN;
-    if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
-    else if (milhar) s = s.replace(/\./g, '');
-    return parseFloat(s);
-  }
   var tick5 = function (v) { return Math.round(v / 5) * 5; };
   var sinalPts = function (v) { return (v >= 0 ? '+' : '−') + fmtInt.format(Math.abs(v)) + ' pts'; };
   var sinalPct = function (v) { return (v >= 0 ? '+' : '−') + fmt2.format(Math.abs(v)) + '%'; };
@@ -229,6 +243,7 @@ function iniciar(D) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function dataBR(iso) { var p = iso.slice(0, 10).split('-'); return p[2] + '/' + p[1] + '/' + p[0] + ' às ' + iso.slice(11, 16); }
+  function remPx() { return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16; }
 
   // ---- Pregões da B3 no ano: seg–sex menos os dias em que a B3 não abre ----
   function pascoa(ano) { // algoritmo de Meeus/Jones/Butcher (calendário gregoriano)
@@ -346,55 +361,52 @@ function iniciar(D) {
     }
     if (!isNaN(taxa)) {
       h += '<path d="' + arco(cx, cy, r, A0, av) + '" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round"/>';
-      var kx = cx + r * Math.cos(av), ky = cy + r * Math.sin(av);
-      h += '<circle cx="' + kx.toFixed(1) + '" cy="' + ky.toFixed(1) + '" r="12" fill="var(--accent)" opacity=".7" filter="url(#gl)"/>' +
-           '<circle cx="' + kx.toFixed(1) + '" cy="' + ky.toFixed(1) + '" r="7" fill="#fff" stroke="var(--accent)" stroke-width="4"/>';
+      var kx = (cx + r * Math.cos(av)).toFixed(1), ky = (cy + r * Math.sin(av)).toFixed(1);
+      h += '<circle cx="' + kx + '" cy="' + ky + '" r="12" fill="var(--accent)" opacity=".7" filter="url(#gl)"/>' +
+           '<circle cx="' + kx + '" cy="' + ky + '" r="7" fill="var(--white)" stroke="var(--accent)" stroke-width="4"/>';
     }
-    h += '<text x="' + cx + '" y="' + (cy - 14) + '" text-anchor="middle" fill="var(--fg)" font-size="38" font-weight="600" font-family="Manrope, Segoe UI, sans-serif">' +
+    h += '<text x="' + cx + '" y="' + (cy - 14) + '" text-anchor="middle" fill="var(--fg)" font-size="38" font-weight="600"' + FONT + '>' +
          (isNaN(taxa) ? '—' : fmt2.format(taxa) + '%') + '</text>';
-    h += '<text x="22" y="146" fill="var(--muted)" font-size="10" font-family="Manrope, Segoe UI, sans-serif">0%</text>' +
-         '<text x="218" y="146" text-anchor="end" fill="var(--muted)" font-size="10" font-family="Manrope, Segoe UI, sans-serif">3%</text>';
+    h += '<text x="22" y="146" fill="var(--muted)" font-size="10"' + FONT + '>0%</text>' +
+         '<text x="218" y="146" text-anchor="end" fill="var(--muted)" font-size="10"' + FONT + '>3%</text>';
     g.innerHTML = h;
   }
 
-  // ---- Gráfico da faixa do dia, em escala ----
+  // ---- Gráfico da faixa do dia: desenhado no tamanho real do quadro, em escala ----
   function desenharFaixa(f, pj, max, min) {
-    var svg = $('chart'), W = 640, H = 280, L = 16, R = 624, T = 70, B = 238;
+    var svg = $('chart'), box = svg.getBoundingClientRect(), rem = remPx();
+    var W = Math.max(Math.round(box.width), 280), H = Math.max(Math.round(box.height), 160);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var k = rem / 16, L = rem, R = W - rem, T = 5.6 * rem, B = H - 2.4 * rem;
+    var tip = $('tip');
     var h = '<defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="var(--accent-2)"/><stop offset="1" stop-color="var(--accent)"/></linearGradient>' +
       '<linearGradient id="cone" x1="0" x2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".04"/></linearGradient>' +
-      '<pattern id="grade" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="var(--line)" stroke-width=".6"/></pattern></defs>';
+      '<pattern id="grade" width="' + 2 * rem + '" height="' + 2 * rem + '" patternUnits="userSpaceOnUse"><path d="M' + 2 * rem + ' 0H0V' + 2 * rem + '" fill="none" stroke="var(--line)" stroke-width="' + (.6 * k) + '"/></pattern></defs>';
     h += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#grade)" opacity=".55"/>';
-    var tip = $('tip');
-    if (f == null) {
-      h += '<text x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle" fill="var(--muted)" font-size="14" font-family="Manrope, Segoe UI, sans-serif">Sem dados suficientes da última coleta para desenhar a faixa</text>';
-      svg.innerHTML = h; tip.hidden = true; return;
+    if (f == null || B - T < 2 * rem) {
+      h += '<text x="' + W / 2 + '" y="' + H / 2 + '" text-anchor="middle" fill="var(--muted)" font-size="' + .85 * rem + '"' + FONT + '>' +
+           (f == null ? 'Sem dados suficientes da última coleta para desenhar a faixa' : '') + '</text>';
+      svg.innerHTML = h; tip.hidden = f == null; return;
     }
     var lo = Math.min(min, f), hi = Math.max(max, f), pad = (hi - lo) * 0.08;
-    lo -= pad * 2.2; hi += pad; // mais espaço embaixo para o rótulo da mínima
-    var y = function (v) { return B - (v - lo) / (hi - lo) * (B - T); };
-    var xF = 70, xP = 300, xE = R - 4;
-    var fx = function (v) { return v.toFixed(1); };
-    // cone (faixa máxima–mínima a partir da abertura)
-    h += '<path d="M' + xP + ' ' + fx(y(pj)) + ' L' + xE + ' ' + fx(y(max)) + ' L' + xE + ' ' + fx(y(min)) + ' Z" fill="url(#cone)"/>';
-    h += '<line x1="' + xP + '" y1="' + fx(y(pj)) + '" x2="' + xE + '" y2="' + fx(y(max)) + '" stroke="var(--up)" stroke-width="1.6" stroke-dasharray="5 5"/>';
-    h += '<line x1="' + xP + '" y1="' + fx(y(pj)) + '" x2="' + xE + '" y2="' + fx(y(min)) + '" stroke="var(--down)" stroke-width="1.6" stroke-dasharray="5 5"/>';
-    h += '<line x1="' + xP + '" y1="' + fx(y(pj)) + '" x2="' + xE + '" y2="' + fx(y(pj)) + '" stroke="var(--faint)" stroke-width="1" stroke-dasharray="2 6"/>';
-    // curva fechamento -> preço justo
-    var cx1 = xF + (xP - xF) * 0.5;
-    h += '<path d="M' + L + ' ' + fx(y(f)) + ' L' + xF + ' ' + fx(y(f)) + ' C' + cx1 + ' ' + fx(y(f)) + ' ' + cx1 + ' ' + fx(y(pj)) + ' ' + xP + ' ' + fx(y(pj)) + '" fill="none" stroke="url(#lg)" stroke-width="3.5" stroke-linecap="round"/>';
-    // marcador vertical até o eixo
-    h += '<line x1="' + xP + '" y1="62" x2="' + xP + '" y2="' + B + '" stroke="var(--muted)" stroke-width="1" opacity=".6"/>';
-    h += '<circle cx="' + xF + '" cy="' + fx(y(f)) + '" r="5" fill="var(--card)" stroke="var(--accent-2)" stroke-width="2.5"/>';
-    h += '<circle cx="' + xP + '" cy="' + fx(y(pj)) + '" r="7" fill="#fff" stroke="var(--card)" stroke-width="3"/>';
-    // rótulos
-    var font = ' font-family="Manrope, Segoe UI, sans-serif"';
-    var fy = y(f), abaixo = fy < y(pj) ? false : true;
-    h += '<text x="' + xF + '" y="' + fx(abaixo ? fy + 22 : fy - 12) + '" text-anchor="middle" fill="var(--muted)" font-size="12"' + font + '>' + fmtInt.format(f) + '</text>';
-    h += '<text x="' + (xE - 2) + '" y="' + fx(y(max) - 10) + '" text-anchor="end" fill="var(--up)" font-size="13" font-weight="600"' + font + '>Máx ' + fmtInt.format(max) + '</text>';
-    h += '<text x="' + (xE - 2) + '" y="' + fx(y(min) + 20) + '" text-anchor="end" fill="var(--down)" font-size="13" font-weight="600"' + font + '>Mín ' + fmtInt.format(min) + '</text>';
-    h += '<line x1="' + L + '" y1="' + B + '" x2="' + R + '" y2="' + B + '" stroke="var(--line)"/>';
-    [[xF, 'Fechamento de ontem'], [xP, 'Abertura'], [(xP + xE) / 2 + 40, 'Faixa do dia']].forEach(function (p) {
-      h += '<text x="' + p[0] + '" y="' + (B + 24) + '" text-anchor="middle" fill="var(--faint)" font-size="11"' + font + '>' + p[1] + '</text>';
+    lo -= pad * 2.2; hi += pad;
+    var y = function (v) { return +(B - (v - lo) / (hi - lo) * (B - T)).toFixed(1); };
+    var xF = L + (R - L) * 0.08, xP = L + (R - L) * 0.46, xE = R - .3 * rem, cx1 = xF + (xP - xF) * 0.5;
+    h += '<path d="M' + xP + ' ' + y(pj) + ' L' + xE + ' ' + y(max) + ' L' + xE + ' ' + y(min) + ' Z" fill="url(#cone)"/>';
+    h += '<line x1="' + xP + '" y1="' + y(pj) + '" x2="' + xE + '" y2="' + y(max) + '" stroke="var(--up)" stroke-width="' + 1.6 * k + '" stroke-dasharray="' + 5 * k + ' ' + 5 * k + '"/>';
+    h += '<line x1="' + xP + '" y1="' + y(pj) + '" x2="' + xE + '" y2="' + y(min) + '" stroke="var(--down)" stroke-width="' + 1.6 * k + '" stroke-dasharray="' + 5 * k + ' ' + 5 * k + '"/>';
+    h += '<line x1="' + xP + '" y1="' + y(pj) + '" x2="' + xE + '" y2="' + y(pj) + '" stroke="var(--faint)" stroke-width="' + k + '" stroke-dasharray="' + 2 * k + ' ' + 6 * k + '"/>';
+    h += '<path d="M' + L + ' ' + y(f) + ' L' + xF + ' ' + y(f) + ' C' + cx1 + ' ' + y(f) + ' ' + cx1 + ' ' + y(pj) + ' ' + xP + ' ' + y(pj) + '" fill="none" stroke="url(#lg)" stroke-width="' + 3.5 * k + '" stroke-linecap="round"/>';
+    h += '<line x1="' + xP + '" y1="' + (T - .6 * rem) + '" x2="' + xP + '" y2="' + B + '" stroke="var(--muted)" stroke-width="' + k + '" opacity=".6"/>';
+    h += '<circle cx="' + xF + '" cy="' + y(f) + '" r="' + 5 * k + '" fill="var(--card)" stroke="var(--accent-2)" stroke-width="' + 2.5 * k + '"/>';
+    h += '<circle cx="' + xP + '" cy="' + y(pj) + '" r="' + 7 * k + '" fill="var(--white)" stroke="var(--card)" stroke-width="' + 3 * k + '"/>';
+    var abaixo = y(f) >= y(pj);
+    h += '<text x="' + xF + '" y="' + (abaixo ? y(f) + 1.4 * rem : y(f) - .8 * rem) + '" text-anchor="middle" fill="var(--muted)" font-size="' + .78 * rem + '"' + FONT + '>' + fmtInt.format(f) + '</text>';
+    h += '<text x="' + (xE - 2 * k) + '" y="' + (y(max) - .65 * rem) + '" text-anchor="end" fill="var(--up)" font-size="' + .85 * rem + '" font-weight="600"' + FONT + '>Máx ' + fmtInt.format(max) + '</text>';
+    h += '<text x="' + (xE - 2 * k) + '" y="' + (y(min) + 1.3 * rem) + '" text-anchor="end" fill="var(--down)" font-size="' + .85 * rem + '" font-weight="600"' + FONT + '>Mín ' + fmtInt.format(min) + '</text>';
+    h += '<line x1="' + L + '" y1="' + B + '" x2="' + R + '" y2="' + B + '" stroke="var(--line)" stroke-width="' + k + '"/>';
+    [[L, 'Fechamento de ontem', 'start'], [xP, 'Abertura', 'middle'], [(xP + xE) / 2, 'Faixa do dia', 'middle']].forEach(function (p) {
+      h += '<text x="' + p[0] + '" y="' + (B + 1.55 * rem) + '" text-anchor="' + p[2] + '" fill="var(--faint)" font-size="' + .72 * rem + '"' + FONT + '>' + p[1] + '</text>';
     });
     svg.innerHTML = h;
     tip.hidden = false;
@@ -433,6 +445,10 @@ function iniciar(D) {
     if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { prompt('Copie:', t); });
     else prompt('Copie:', t);
   });
+  // Redesenha o gráfico quando a janela muda de tamanho (o gráfico usa o tamanho real do quadro).
+  var espera = null;
+  window.addEventListener('resize', function () { clearTimeout(espera); espera = setTimeout(calcular, 80); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(calcular);
 
   calcular();
 }
