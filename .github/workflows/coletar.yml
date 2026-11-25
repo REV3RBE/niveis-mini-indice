@@ -17,15 +17,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  coletar-e-publicar:
+  coletar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Coletar S&P e VIX
+      - name: Coletar fechamento (B3), S&P e VIX
         if: github.event_name != 'push'
         shell: pwsh
         run: ./coletar-site.ps1
@@ -43,5 +40,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
+
+  publicar:
+    needs: coletar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v4
